@@ -17,7 +17,7 @@ const CART_CREATE_MUTATION = `#graphql
                     }
                 }
             }
-            useErrors {
+            userErrors {
                 code
                 field
                 message
@@ -39,7 +39,7 @@ type CartCreateData = {
                 };
             };
         } | null;
-        useErrors: Array<{
+        userErrors: Array<{
             code: string | null;
             field: string[] | null;
             message: string;
@@ -125,10 +125,10 @@ export async function createCartAction(
             };
         }
 
-        if (payload.useErrors.length > 0) {
+        if (payload.userErrors.length > 0) {
             return {
                 status: "error",
-                message: payload.useErrors.map((error) => error.message).join(" ")
+                message: payload.userErrors.map((error) => error.message).join(" ")
             };
         }
 
@@ -151,8 +151,8 @@ export async function createCartAction(
         return {
             status: "success",
             message: `Cart created with ${totalQuantity} item. ` +
-                `Total: ${cost.totalAmount.amount}. ` +
-                `${cost.totalAmount.currencyCode}` +
+                `Total: ${cost.totalAmount.amount}` +
+                `${cost.totalAmount.currencyCode}. ` +
                 `Checkout URL received.`,
         };
     } catch (error) {
