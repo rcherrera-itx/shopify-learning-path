@@ -1,10 +1,9 @@
 {
-  "name": "shopify-learning",
+  "name": "shopify-learning-path",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "day6": "node --env-file=.env --import tsx src/scripts/day-6.ts",
     "typecheck": "tsc --noEmit"
   },

@@ -1,4 +1,4 @@
-function requirEnvirontmentVariable(name: string) {
+function requireEnvironmentVariable(name: string) {
     const value = process.env[name];
 
     if(!value) {
@@ -9,7 +9,7 @@ function requirEnvirontmentVariable(name: string) {
 }
 
 export const shopifyConfig = {
-    storeDomain: requirEnvirontmentVariable('SHOPIFY_STORE_DOMAIN'),
-    apiVersion: requirEnvirontmentVariable('SHOPIFY_STOREFRONT_API_VERSION'),
-    privateAccessToken: requirEnvirontmentVariable('SHOPIFY_STOREFRONT_PRIVATE_ACCESS_TOKEN')
-}
+    storeDomain: requireEnvironmentVariable('SHOPIFY_STORE_DOMAIN'),
+    apiVersion: requireEnvironmentVariable('SHOPIFY_STOREFRONT_API_VERSION'),
+    privateAccessToken: requireEnvironmentVariable('SHOPIFY_STOREFRONT_PRIVATE_ACCESS_TOKEN')
+} as const;
