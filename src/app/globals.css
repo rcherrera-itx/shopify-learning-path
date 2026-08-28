@@ -18,3 +18,44 @@ main {
     margin-inline: auto;
     padding-block: 4rem;
 }
+
+article {
+    display: grid;
+    gap: 2rem;
+    margin-block-start: 2rem;
+}
+
+dl {
+    display: grid;
+    gap: 1rem;
+}
+
+dl div {
+    display: grid;
+    gap: 1rem;
+}
+
+dt {
+    font-weight: 700;
+}
+
+dd {
+    margin: 0;
+}
+
+fieldset {
+    display: grid;
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+label {
+    display: grid;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+input[type="radio"] {
+    inline-size: 1rem;
+    block-size: 1rem;
+}

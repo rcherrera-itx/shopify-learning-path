@@ -1,6 +1,5 @@
 import { createStorefrontApiClient } from '@shopify/storefront-api-client';
-
-import { shopifyConfig } from './config.js';
+import { shopifyConfig } from './config';
 
 const storeDomain = shopifyConfig.storeDomain.startsWith('http')
     ? shopifyConfig.storeDomain
