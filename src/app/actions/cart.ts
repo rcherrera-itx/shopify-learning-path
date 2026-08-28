@@ -1,7 +1,9 @@
 "use server"
-
+import { cookies } from "next/headers";
+import { getBuyerIpHeaders } from "@/shopify/buyer-ip";
 import { storefrontClient } from "@/shopify/client";
-import { headers } from "next/headers";
+import { CART_COOKIE_MAX_AGE, CART_COOKIE_NAME } from '@/shopify/cart-cookie';
+
 
 const CART_CREATE_MUTATION = `#graphql
     mutation CartCreate($input: CartInput!) {
@@ -52,16 +54,6 @@ export type CreateCartState = {
     message: string;
 }
 
-function getBuyerIp(requestHeaders: Headers): string | null {
-    const forwardedFor = requestHeaders.get("x-forwarded-for");
-
-    if (forwardedFor) {
-        return forwardedFor.split(",")[0]?.trim() || null;
-    }
-
-    return requestHeaders.get("x-real-ip");
-}
-
 export async function createCartAction(
     _previousState: CreateCartState,
     formData: FormData
@@ -79,8 +71,7 @@ export async function createCartAction(
     }
 
     try {
-        const requestHeaders = await headers();
-        const buyerIp = getBuyerIp(requestHeaders);
+        const buyerIpheaders = await getBuyerIpHeaders();
 
         const { data, errors } = await storefrontClient.request<CartCreateData>(
             CART_CREATE_MUTATION,
@@ -95,11 +86,7 @@ export async function createCartAction(
                         ],
                     },
                 },
-                ...(buyerIp ? {
-                    headers: {
-                        "Shopify-Storefront-Buyer-IP": buyerIp,
-                    },
-                } : {}),
+                headers: buyerIpheaders
             },
         );
 
@@ -147,6 +134,20 @@ export async function createCartAction(
                 message: "The cart does not contain a checkout URL."
             };
         }
+
+        const cookieStore = await cookies();
+
+        cookieStore.set(
+            CART_COOKIE_NAME,
+            payload.cart.id,
+            {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                path: "/",
+                maxAge: CART_COOKIE_MAX_AGE
+            }
+        );
 
         return {
             status: "success",
