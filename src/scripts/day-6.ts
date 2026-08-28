@@ -64,7 +64,7 @@ const PRODUCT_BY_HANDLE_QUERY = `#graphql
     }
 `;
 
-const COLLECTION_BY_HANDLE_QUERY = `
+const COLLECTION_BY_HANDLE_QUERY = `#graphql
     query CollectionByHandle($handle: String!) {
         collection(handle: $handle) {
             id

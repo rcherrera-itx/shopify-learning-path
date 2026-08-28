@@ -1,4 +1,4 @@
-function requireEnvironmentVariable(name: string) {
+function requireEnvironmentVariable(name: string): string {
     const value = process.env[name];
 
     if(!value) {
