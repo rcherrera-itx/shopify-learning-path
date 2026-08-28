@@ -18,7 +18,7 @@ async function ProductDetail() {
     return (
         <article>
             <header>
-                <p>Product leaded from Shopify</p>
+                <p>Product loaded from Shopify</p>
                 <h2>{product.title}</h2>
                 <p>{product.description}</p>
             </header>
