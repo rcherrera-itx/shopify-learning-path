@@ -5,22 +5,24 @@ import { headers } from "next/headers";
 
 const CART_CREATE_MUTATION = `#graphql
     mutation CartCreate($input: CartInput!) {
-        cart {
-            id
-            totalQuantity
-            checkoutUrl
-            cost {
-                totalAmount {
-                    amount
-                    currencyCode
+        cartCreate(input: $input) {
+            cart {
+                id
+                totalQuantity
+                checkoutUrl
+                cost {
+                    totalAmount {
+                        amount
+                        currencyCode
+                    }
                 }
             }
-        }
-        useErrors {
-            code
-            field
-            message
-        }
+            useErrors {
+                code
+                field
+                message
+            }
+        }    
     }
 `;
 
@@ -54,7 +56,7 @@ function getBuyerIp(requestHeaders: Headers): string | null {
     const forwardedFor = requestHeaders.get("x-forwarded-for");
 
     if (forwardedFor) {
-        return forwardedFor.split(", ")[0]?.trim() || null;
+        return forwardedFor.split(",")[0]?.trim() || null;
     }
 
     return requestHeaders.get("x-real-ip");
@@ -72,7 +74,7 @@ export async function createCartAction(
     ) {
         return {
             status: "error",
-            message: "Selectd a valid product variant."
+            message: "Select a valid product variant."
         }
     }
 
@@ -102,9 +104,10 @@ export async function createCartAction(
         );
 
         if (errors) {
+            const graphQlMessages = errors.graphQLErrors?.map((error) => error.message).join(" | ");
             console.error(
                 "[CART_CREATE][API]",
-                errors.message ?? "Storefront API request failed."
+                graphQlMessages ?? errors.message ?? "Storefront API request failed."
             );
 
             return {
@@ -125,7 +128,7 @@ export async function createCartAction(
         if (payload.useErrors.length > 0) {
             return {
                 status: "error",
-                message: payload.useErrors.map((error) => error.message).join(", ")
+                message: payload.useErrors.map((error) => error.message).join(" ")
             };
         }
 
@@ -150,7 +153,7 @@ export async function createCartAction(
             message: `Cart created with ${totalQuantity} item. ` +
                 `Total: ${cost.totalAmount.amount}. ` +
                 `${cost.totalAmount.currencyCode}` +
-                `Checkout URL received.`
+                `Checkout URL received.`,
         };
     } catch (error) {
         console.error(
