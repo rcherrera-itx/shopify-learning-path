@@ -1,6 +1,8 @@
 import "server-only";
 
 import { storefrontClient } from "../client";
+import { getBuyerIpHeaders } from "../buyer-ip";
+
 
 const PRODUCT_BY_HANDLE_QUERY = `#graphql
     query ProductByHandle($handle: String!) {
@@ -61,12 +63,14 @@ type ProductByHandleData = {
 export async function getProductByHandle(
     handle: string,
 ): Promise<StorefrontProduct> {
+    const buyerIpHeaders = await getBuyerIpHeaders();
     const { data, errors } = await storefrontClient.request<ProductByHandleData>(
         PRODUCT_BY_HANDLE_QUERY,
         {
             variables: {
                 handle,
-            }
+            },
+            headers: buyerIpHeaders
         }
     );
 
