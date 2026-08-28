@@ -36,6 +36,34 @@ const PRODUCTS_QUERY = `#graphql
     }
 `;
 
+const PRODUCT_BY_HANDLE_QUERY = `#graphql
+    query ProductByHandle($handle: String!) {
+        product(handle: $handle) {
+            id
+            title
+            handle
+            description
+            availableForSale
+            variants(first: 10){
+                nodes {
+                    id
+                    title
+                    sku
+                    availableForSale
+                    price {
+                        amount
+                        currencyCode
+                    }
+                    selectedOptions {
+                        name
+                        value
+                    }
+                }
+            }
+        }
+    }
+`;
+
 type GraphQlError = {
     message: string;
 };
@@ -47,6 +75,32 @@ type ProductsResponse = {
         };
     };
     errors?: GraphQlError[];
+}
+
+type ProductByHandleData = {
+    product: {
+        id: string;
+        title: string;
+        handle: string;
+        description: string;
+        availableForSale: boolean;
+        variants: {
+            nodes: Array<{
+                id: string;
+                title: string;
+                sku: string | null;
+                availableForSale: boolean;
+                price: {
+                    amount: string;
+                    currencyCode: string;
+                };
+                selectedOptions: Array<{
+                    name: string;
+                    value: string;
+                }>;
+            }>;
+        };
+    } | null;
 }
 
 const response = await storefrontClient.fetch(PRODUCTS_QUERY, {
@@ -66,4 +120,29 @@ if (!response.ok || payload.errors || !payload.data) {
     process.exitCode = 1;
 } else {
     console.dir(payload.data.products.nodes, { depth: null });
+}
+
+const { data: productData, errors: productErrors } =
+    await storefrontClient.request<ProductByHandleData>(
+        PRODUCT_BY_HANDLE_QUERY,
+        {
+            variables: {
+                handle: "composable-commerce-t-shirt"
+            },
+        },
+    );
+
+if (productErrors || !productData?.product) {
+    console.error(
+        JSON.stringify(
+            productErrors ?? { message: "Product not found." },
+            null,
+            2,
+        ),
+    );
+
+    process.exitCode = 1;
+} else {
+    console.log("\nProduct by handle:");
+    console.dir(productData.product, { depth: null });
 }
