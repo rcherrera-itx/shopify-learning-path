@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 
 import {
     createCartAction,
@@ -83,6 +84,10 @@ export function CreateCartForm({
                     role={state.status === "error" ? "alert" : "status"}
                     aria-live="polite"
                 >{state.message}</p>
+            ) : null}
+
+            {state.status === "success" ? (
+                <Link href="/cart">View cart</Link>
             ) : null}
         </form>
     );
