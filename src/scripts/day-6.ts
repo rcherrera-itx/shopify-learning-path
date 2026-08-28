@@ -1,32 +1,34 @@
 import { storefrontClient } from '../shopify/client.js';
 
-const PRODUCTS_QUERY = `#grpahql
+const PRODUCTS_QUERY = `#graphql
     query Products($first: Int!) {
-        nodes {
-            id
-            title
-            handle
-            vendor
-            availableForSale
-            priceRange {
-                minVariantPrice {
-                    amount
-                    currencyCode
-                }
-            }
-            variants(first: 10) {
-                nodes {
-                    id
-                    title
-                    sku
-                    availableForSales
-                    price {
+        products(first: $first, sortKey: TITLE){
+            nodes {
+                id
+                title
+                handle
+                vendor
+                availableForSale
+                priceRange {
+                    minVariantPrice {
                         amount
                         currencyCode
                     }
-                    selectedOptions {
-                        name
-                        value
+                }
+                variants(first: 10) {
+                    nodes {
+                        id
+                        title
+                        sku
+                        availableForSale
+                        price {
+                            amount
+                            currencyCode
+                        }
+                        selectedOptions {
+                            name
+                            value
+                        }
                     }
                 }
             }
