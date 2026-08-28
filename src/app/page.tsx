@@ -1,12 +1,8 @@
-import { getProductByHandle } from "@/shopify/queries/product";
 import { Suspense } from "react";
 
-function formatCurrency(amount: string, currencyCode: string): string {
-    return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: currencyCode
-    }).format(Number(amount));
-}
+import { getProductByHandle } from "@/shopify/queries/product";
+import { CreateCartForm } from "./components/create-cart-form";
+
 
 async function ProductDetail() {
     const product = await getProductByHandle('composable-commerce-t-shirt');
@@ -34,28 +30,7 @@ async function ProductDetail() {
                 </div>
             </dl>
 
-            <fieldset>
-                <legend>Choose a variant</legend>
-
-                {product.variants.nodes.map((variant) => {
-                    const options = variant.selectedOptions
-                        .map(({ name, value }) => `${name}: ${value}`)
-                        .join(", ");
-
-                    return (
-                        <label key={variant.id}>
-                            <input type="radio" name="merchandiseId" value={variant.id} defaultChecked={variant.id === defaultVariantId} disabled={!variant.availableForSale} />
-                            <span>
-                                {options || variant.title}
-                                {" - "}
-                                {formatCurrency(variant.price.amount, variant.price.currencyCode)}
-                                {" - "}
-                                {variant.availableForSale ? "Available" : "Not Available"}
-                            </span>
-                        </label>
-                    );
-                })}
-            </fieldset>
+            <CreateCartForm variants={product.variants.nodes} />
         </article>
     );
 };
