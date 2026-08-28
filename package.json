@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "day6": "node --env-file=.env --import tsx src/scripts/day-6.ts",
+    "day6:versioning": "node --env-file=.env --import tsx src/scripts/day-6-versioning.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
