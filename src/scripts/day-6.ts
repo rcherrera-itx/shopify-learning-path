@@ -64,6 +64,32 @@ const PRODUCT_BY_HANDLE_QUERY = `#graphql
     }
 `;
 
+const COLLECTION_BY_HANDLE_QUERY = `
+    query CollectionByHandle($handle: String!) {
+        collection(handle: $handle) {
+            id
+            title
+            handle
+            description
+            products(first: 10) {
+                nodes {
+                    id
+                    title
+                    handle
+                    availableForSale
+                    priceRange {
+                        minVariantPrice {
+                            amount
+                            currencyCode
+                        }
+                    }
+                }
+            }
+        }
+    }
+`;
+
+
 type GraphQlError = {
     message: string;
 };
@@ -75,7 +101,7 @@ type ProductsResponse = {
         };
     };
     errors?: GraphQlError[];
-}
+};
 
 type ProductByHandleData = {
     product: {
@@ -101,7 +127,30 @@ type ProductByHandleData = {
             }>;
         };
     } | null;
-}
+};
+
+type CollectionByHandleData = {
+    collection: {
+        id: string;
+        title: string;
+        handle: string;
+        description: string;
+        products: {
+            nodes: Array<{
+                id: string;
+                title: string;
+                handle: string;
+                availableForSale: boolean;
+                priceRange: {
+                    minVariantPrice: {
+                        amount: string;
+                        currencyCode: string;
+                    };
+                };
+            }>;
+        };
+    } | null;
+};
 
 const response = await storefrontClient.fetch(PRODUCTS_QUERY, {
     variables: { first: 10 },
@@ -145,4 +194,29 @@ if (productErrors || !productData?.product) {
 } else {
     console.log("\nProduct by handle:");
     console.dir(productData.product, { depth: null });
+}
+
+const { data: collectionData, errors: collectionErrors } =
+    await storefrontClient.request<CollectionByHandleData>(
+        COLLECTION_BY_HANDLE_QUERY,
+        {
+            variables: {
+                handle: "developer-essentials",
+            },
+        },
+    );
+
+if (collectionErrors || !collectionData?.collection) {
+    console.error(
+        JSON.stringify(
+            collectionErrors ?? { message: "Collection not found." },
+            null,
+            2,
+        ),
+    );
+
+    process.exitCode = 1;
+} else {
+    console.log("\nCollection by handle:");
+    console.dir(collectionData.collection, { depth: null });
 }
