@@ -1,0 +1,20 @@
+:root {
+    color-scheme: light;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    color: #171717;
+    background: #ffffff;
+}
+
+main {
+    width: min(100% - 2rem, 64rem);
+    margin-inline: auto;
+    padding-block: 4rem;
+}
