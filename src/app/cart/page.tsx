@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { CART_COOKIE_NAME } from "@/shopify/cart-cookie";
 import { getCart } from "@/shopify/queries/cart";
 import { UpdateCartLineForm } from "../components/update-cart-form";
+import { CheckoutForm } from "../components/checkout-form";
 
 function formatCurrency(amount: string, currencyCode: string): string {
     return new Intl.NumberFormat("en-US", {
@@ -70,6 +71,7 @@ async function CartDetails() {
                 )}
             </p>
 
+            <CheckoutForm />
             <Link href="/">Return to product</Link>
         </>
     );
