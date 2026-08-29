@@ -202,13 +202,9 @@ export async function addCartAction(
             revalidatePath("/cart");
 
             return {
-                status: "success",
-                message: `Item added. Cart now contains  ` +
-                    `${payload.cart.totalQuantity} item(s).` +
-                    `Total: ` +
-                    `${payload.cart.cost.totalAmount.amount} ` +
-                    `${payload.cart.cost.totalAmount.currencyCode}`
-            };
+                    status: "success",
+                    message: "Item added to cart."
+                };
         }
 
         cookieStore.delete(CART_COOKIE_NAME);
@@ -456,8 +452,7 @@ export async function updateCartLineAction(
 
         return {
             status: "success",
-            message: `Quantity updated. Cart now contains  ` +
-                `${payload.cart.totalQuantity} item(s).`,
+            message: "Item updated.",
         };
     } catch (error) {
         console.error(
