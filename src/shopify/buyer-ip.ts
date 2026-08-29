@@ -6,7 +6,7 @@ export async function getBuyerIpHeaders(): Promise<
     Record<string, string>
 > {
     const requestHeader = await headers();
-    const forwardedFor = requestHeader.get("x-formward-for");
+    const forwardedFor = requestHeader.get("x-forwarded-for");
 
     const buyerIp = forwardedFor?.split(",")[0]?.trim() || requestHeader.get("x-real-ip");
 

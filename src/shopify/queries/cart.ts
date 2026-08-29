@@ -115,8 +115,8 @@ const CART_CHECKOUT_URL_QUERY = `#graphql
 type CartCheckoutUrlData = {
     cart: {
         checkoutUrl: string;
-    }
-}
+    } | null;
+};
 
 export async function getCheckoutUrl(
     cartId: string,
