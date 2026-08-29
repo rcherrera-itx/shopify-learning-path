@@ -1,7 +1,8 @@
 import { Suspense } from "react";
+import Link from "next/link";
 
 import { getProductByHandle } from "@/shopify/queries/product";
-import { CreateCartForm } from "./components/create-cart-form";
+import { AddToCartForm } from "./components/add-to-cart-form";
 
 
 async function ProductDetail() {
@@ -30,7 +31,8 @@ async function ProductDetail() {
                 </div>
             </dl>
 
-            <CreateCartForm variants={product.variants.nodes} />
+            <AddToCartForm variants={product.variants.nodes} />
+            <Link href="/cart">View cart</Link>
         </article>
     );
 };
