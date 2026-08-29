@@ -54,7 +54,7 @@ type CartCreateData = {
 const CART_LINES_ADD_MUTATION = `#graphql
     mutation CartLinesAdd(
         $cartId: ID!
-        $lines: [CartLineAddInput!]!
+        $lines: [CartLineInput!]!
     ) {
         cartLinesAdd(
             cartId: $cartId,
