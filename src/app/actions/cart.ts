@@ -1,10 +1,11 @@
 "use server"
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getBuyerIpHeaders } from "@/shopify/buyer-ip";
 import { storefrontClient } from "@/shopify/client";
 import { CART_COOKIE_MAX_AGE, CART_COOKIE_NAME } from '@/shopify/cart-cookie';
-import { getCart } from "@/shopify/queries/cart";
+import { getCart, getCheckoutUrl } from "@/shopify/queries/cart";
 
 const CART_CREATE_MUTATION = `#graphql
     mutation CartCreate($input: CartInput!) {
@@ -202,9 +203,9 @@ export async function addCartAction(
             revalidatePath("/cart");
 
             return {
-                    status: "success",
-                    message: "Item added to cart."
-                };
+                status: "success",
+                message: "Item added to cart."
+            };
         }
 
         cookieStore.delete(CART_COOKIE_NAME);
@@ -466,4 +467,63 @@ export async function updateCartLineAction(
         };
     }
 };
+
+export type CheckoutState = {
+    status: "idle" | "error";
+    message: string;
+};
+
+export async function proceedToCheckout(
+    _previousState: CheckoutState,
+    _formData: FormData
+): Promise<CheckoutState> {
+    const cookieStore = await cookies();
+    const cartId = cookieStore.get(CART_COOKIE_NAME)?.value;
+
+    if (!cartId) {
+        return {
+            status: "error",
+            message: "The cart session is missing."
+        };
+    }
+
+    let checkoutUrl: string;
+
+    try {
+        const resolvedCheckoutUrl = await getCheckoutUrl(cartId);
+
+        if (!resolvedCheckoutUrl) {
+            cookieStore.delete(CART_COOKIE_NAME);
+
+            return {
+                status: "error",
+                message: "The cart is expired or unavailable."
+            };
+        }
+
+        const parsedCheckoutUrl = new URL(resolvedCheckoutUrl);
+
+        if (parsedCheckoutUrl.protocol !== "https:") {
+            return {
+                status: "error",
+                message: "Shopify returned an invalid checkout URL."
+            };
+        }
+
+        checkoutUrl = parsedCheckoutUrl.toString();
+
+    } catch (error) {
+        console.error(
+            "[CHECKOUT][EXCEPTION]",
+            error instanceof Error ? error.message : "Unknown error."
+        );
+
+        return {
+            status: "error",
+            message: "Shopify Checkout is temporarily unavailable."
+        };
+    }
+
+    redirect(checkoutUrl);
+}
 
