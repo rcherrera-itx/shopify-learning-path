@@ -1,11 +1,10 @@
 "use client";
 
 import { useActionState } from "react";
-import Link from "next/link";
 
 import {
-    createCartAction,
-    type CreateCartState,
+    addCartAction,
+    type AddCartState,
 } from "@/app/actions/cart";
 
 type CartVariant = {
@@ -22,11 +21,11 @@ type CartVariant = {
     }>;
 };
 
-type CreateCartFormProps = {
+type AddToCartFormProps = {
     variants: CartVariant[];
 };
 
-const initialState: CreateCartState = {
+const initialState: AddCartState = {
     status: "idle",
     message: "",
 };
@@ -38,11 +37,11 @@ function formatCurrency(amount: string, currencyCode: string): string {
     }).format(Number(amount));
 }
 
-export function CreateCartForm({
+export function AddToCartForm({
     variants,
-}: CreateCartFormProps) {
+}: AddToCartFormProps) {
     const [state, formAction, isPending] = useActionState(
-        createCartAction,
+        addCartAction,
         initialState,
     );
 
@@ -76,7 +75,7 @@ export function CreateCartForm({
             </fieldset>
 
             <button type="submit" disabled={isPending || !defaultVariantId}>
-                {isPending ? "Creating cart..." : "Create cart"}
+                {isPending ? "Adding to cart..." : "Add to cart"}
             </button>
 
             {state.message ? (
@@ -84,10 +83,6 @@ export function CreateCartForm({
                     role={state.status === "error" ? "alert" : "status"}
                     aria-live="polite"
                 >{state.message}</p>
-            ) : null}
-
-            {state.status === "success" ? (
-                <Link href="/cart">View cart</Link>
             ) : null}
         </form>
     );
