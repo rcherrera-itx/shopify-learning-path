@@ -1,10 +1,10 @@
 "use server"
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { getBuyerIpHeaders } from "@/shopify/buyer-ip";
 import { storefrontClient } from "@/shopify/client";
 import { CART_COOKIE_MAX_AGE, CART_COOKIE_NAME } from '@/shopify/cart-cookie';
-import { revalidatePath } from "next/cache";
-
+import { getCart } from "@/shopify/queries/cart";
 
 const CART_CREATE_MUTATION = `#graphql
     mutation CartCreate($input: CartInput!) {
@@ -50,15 +50,67 @@ type CartCreateData = {
     };
 };
 
-export type CreateCartState = {
+
+const CART_LINES_ADD_MUTATION = `#graphql
+    mutation CartLinesAdd(
+        $cartId: ID!
+        $lines: [CartLineAddInput!]!
+    ) {
+        cartLinesAdd(
+            cartId: $cartId,
+            lines: $lines
+        ) {
+            cart {
+                totalQuantity
+                cost {
+                    totalAmount {
+                        amount
+                        currencyCode
+                    }
+                }
+            }
+            userErrors {
+                code
+                field
+                message
+            }
+        }    
+    }
+`;
+
+type CartLinesAddData = {
+    cartLinesAdd: {
+        cart: {
+            totalQuantity: number;
+            cost: {
+                totalAmount: {
+                    amount: string;
+                    currencyCode: string;
+                };
+            };
+        } | null;
+        userErrors: Array<{
+            code: string | null;
+            field: string[] | null;
+            message: string;
+        }>;
+    };
+};
+
+export type AddCartLineState = {
     status: "idle" | "success" | "error";
     message: string;
 }
 
-export async function createCartAction(
-    _previousState: CreateCartState,
+export type AddCartState = {
+    status: "idle" | "success" | "error";
+    message: string;
+}
+
+export async function addCartAction(
+    _previousState: AddCartState,
     formData: FormData
-): Promise<CreateCartState> {
+): Promise<AddCartState> {
     const merchandiseId = formData.get("merchandiseId");
 
     if (
@@ -69,6 +121,97 @@ export async function createCartAction(
             status: "error",
             message: "Select a valid product variant."
         }
+    }
+
+    const cookieStore = await cookies();
+    const existingCartId = cookieStore.get(CART_COOKIE_NAME)?.value;
+
+    if (existingCartId) {
+        let cartExists: boolean;
+
+        try {
+            const existingCart = await getCart(existingCartId);
+            cartExists = existingCart !== null;
+        } catch (error) {
+            console.error(
+                "[CART_VALIDATE][EXCEPTION]",
+                error instanceof Error ? error.message : "Unknown error."
+            );
+
+            return {
+                status: "error",
+                message: "The existing cart could not be validated Try again."
+            };
+        }
+
+        if (cartExists) {
+            const buyerIpheaders = await getBuyerIpHeaders();
+
+            const { data, errors } = await storefrontClient.request<CartLinesAddData>(
+                CART_LINES_ADD_MUTATION,
+                {
+                    variables: {
+                        cartId: existingCartId,
+                        lines: [
+                            {
+                                merchandiseId,
+                                quantity: 1
+                            },
+                        ],
+                    },
+                    headers: buyerIpheaders
+                },
+            );
+
+            if (errors) {
+                const graphQlMessages = errors.graphQLErrors?.map((error) => error.message).join(" | ");
+                console.error(
+                    "[CART_LINES_ADD][API]",
+                    graphQlMessages ?? errors.message ?? "Storefront API request failed."
+                );
+
+                return {
+                    status: "error",
+                    message: "Shopify could not update the cart."
+                };
+            }
+
+            const payload = data?.cartLinesAdd;
+
+            if (!payload) {
+                return {
+                    status: "error",
+                    message: "Shopify returned an empty update response."
+                };
+            }
+
+            if (payload.userErrors.length > 0) {
+                return {
+                    status: "error",
+                    message: payload.userErrors.map((error) => error.message).join(" ")
+                };
+            }
+
+            if (!payload.cart) {
+                return {
+                    status: "error",
+                    message: "Shopify did not return the updated cart."
+                };
+            }
+
+            revalidatePath("/cart");
+
+            return {
+                status: "success",
+                message: `Item added. Cart now contains  ` +
+                    `${payload.cart.totalQuantity} item(s).` +
+                    `Total: ` +
+                    `${payload.cart.cost.totalAmount.amount} ` +
+                    `${payload.cart.cost.totalAmount.currencyCode}`
+            };
+        }
+
+        cookieStore.delete(CART_COOKIE_NAME);
     }
 
     try {
@@ -136,8 +279,6 @@ export async function createCartAction(
             };
         }
 
-        const cookieStore = await cookies();
-
         cookieStore.set(
             CART_COOKIE_NAME,
             payload.cart.id,
@@ -154,8 +295,7 @@ export async function createCartAction(
             status: "success",
             message: `Cart created with ${totalQuantity} item. ` +
                 `Total: ${cost.totalAmount.amount} ` +
-                `${cost.totalAmount.currencyCode}. ` +
-                `Checkout URL received.`,
+                `${cost.totalAmount.currencyCode}. `,
         };
     } catch (error) {
         console.error(
@@ -331,3 +471,4 @@ export async function updateCartLineAction(
         };
     }
 };
+
