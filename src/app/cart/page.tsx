@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { CART_COOKIE_NAME } from "@/shopify/cart-cookie";
 import { getCart } from "@/shopify/queries/cart";
-import { Suspense } from "react";
+import { UpdateCartLineForm } from "../components/update-cart-form";
 
 function formatCurrency(amount: string, currencyCode: string): string {
     return new Intl.NumberFormat("en-US", {
@@ -48,7 +49,7 @@ async function CartDetails() {
                             {line.merchandise.title}
                         </p>
 
-                        <p>Quantity: {line.quantity}</p>
+                        <UpdateCartLineForm cartLineId={line.id} quantity={line.quantity} />
 
                         <p>
                             Unit price:{" "}
